@@ -76,33 +76,51 @@ class User(object):
         res.execute()
 
 
-if __name__=='__main__':
+    def delete_all_playlists(self, auth, channel):
+        playlists = self.get_playlists(channel)
+        for i in playlists:
+            self.delete_playlist(i[1])
 
-    def copy_channel(auth, channel):
-        src = User(auth)
-        playlists = src.get_playlists(channel)
-        library = []
-        for title, id in playlists:
+    def copy_library(self, src_channel):
+        src_playlists = self.get_playlists(src_channel)
+        src_library = []
+        for title, id in src_playlists:
             playlist = {}
             playlist['id'] = id
             playlist['title'] = title
-            playlist['songs'] = src.get_songs(id)
-            library.append(playlist)
-        for playlist in library:
-            new_playlist_id = src.create_playlist(playlist['title'])
-            print(new_playlist_id)
-            for song in playlist['songs']:
-                src.insert_song(new_playlist_id, song)
+            playlist['songs'] = self.get_songs(id)
+            src_library.append(playlist)
+        return src_library
 
-    def delete_all_playlists(auth, channel):
-        src = User(auth)
-        playlists = src.get_playlists(channel)
-        for i in playlists:
-            id = i[1]
-            print(id)
-            src.delete_playlist(id)
+    def paste_library(self, src_library, user_channel):
+        user_playlists = {k:v for k, v in self.get_playlists(user_channel)}
+        for src_playlist in src_library:
+            # FUNCTION - create playlist - (new_playlist, exisiting_playlists) - user_playlist_id
+            if src_playlist['title'] not in list(user_playlists.keys()):
+                user_playlist_id = self.create_playlist(src_playlist['title'])
+            else:
+                user_playlist_id = user_playlists[src_playlist['title']]
+            user_songs = self.get_songs(user_playlist_id)
+            print('inserting songs into - '+src_playlist['title'])
+            for song_id in src_playlist['songs']:
+                # FUNCTION - create song - (new_song, exisiting_songs) - None
+                if song_id not in user_songs:
+                    self.insert_song(user_playlist_id, song_id)
 
-    copy_channel('client_secrets.json', 'UC1eOi_4jVFP5IPnjogNiAWg')
+    def run(self, src_channel, user_channel):
+        src_library = self.copy_library(src_channel)
+        self.paste_library(src_library, user_channel)
+
+
+
+if __name__=='__main__':
+
+    user = User('client_secrets.json')
+    user.run('UC1eOi_4jVFP5IPnjogNiAWg','UCinjL5fVqwd6NVZquwYD9EA')
+
+
+
+
 
 
 
