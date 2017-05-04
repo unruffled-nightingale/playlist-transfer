@@ -112,7 +112,6 @@ class User(object):
         self.paste_library(src_library, user_channel)
 
 
-
 if __name__=='__main__':
 
     user = User('client_secrets.json')
